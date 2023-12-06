@@ -1,6 +1,7 @@
 import base64
 from io import BytesIO
 
+from PIL import Image
 import PIL.Image
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -305,16 +306,19 @@ def request_item_photo(request, inventory_id):
     requested_inventory = InventoryItem.objects.get(id=inventory_id)
     product_name = requested_inventory.product_name
     product_image = PIL.Image.open(f'socialnetwork/resources/{product_name}.png')
-
+    print(product_image.size, "old image")
+    #product_image = product_image.resize((1024, 768), Image.ANTIALIAS)         
+    print(product_image.size, "new image")
     buff = BytesIO()
-    product_image.save(buff, format="PNG")
+    product_image.save(buff, format="PNG", optimize=True, quality=10)
     img_str = base64.b64encode(buff.getvalue())
-
+    print(len(img_str))
     response = JsonResponse({'request': f"Your order image \n {img_str}"}, safe=False)
     _persist_response_log(img_str, "text")
     return response
 
 
+#encrypt it, band
 def _my_json_error_response(message, status=200):
     # You can create your JSON by constructing the string representation yourself (or just use json.dumps)
     response_json = '{ "error": "' + message + '" }'
